@@ -1,0 +1,150 @@
+# ======================
+# PYTHON & ENVIRONMENT
+# ======================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.venv/
+venv/
+ENV/
+env/
+.venv*
+
+# ======================
+# IDE & EDITORS
+# ======================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.sublime-workspace
+*.sublime-project
+.spyproject
+.spyderproject
+.ropeproject
+
+# ======================
+# JUPYTER NOTEBOOKS
+# ======================
+.ipynb_checkpoints
+*.ipynb_checkpoints
+.jupyter/
+
+# ======================
+# DATA & MODELS
+# ======================
+# Raw dataset (too large to track)
+data/raw/**
+!data/raw/.gitkeep
+
+# Processed data (can be regenerated)
+data/processed/**
+!data/processed/.gitkeep
+
+# Model checkpoints (large files, regeneratable)
+models/phase_1/**
+!models/phase_1/.gitkeep
+models/phase_2/**
+!models/phase_2/.gitkeep
+models/phase_3/**
+!models/phase_3/.gitkeep
+
+# Large result files
+results/phase_1/**
+!results/phase_1/.gitkeep
+results/phase_2/**
+!results/phase_2/.gitkeep
+results/phase_3/**
+!results/phase_3/.gitkeep
+
+# Figures (can be regenerated)
+results/figures/**
+!results/figures/.gitkeep
+
+# ======================
+# LOGS & OUTPUTS
+# ======================
+logs/
+*.log
+tensorboard_logs/
+wandb/
+.wandb/
+*.csv
+output/
+
+# ======================
+# TEMPORARY FILES
+# ======================
+*.tmp
+*.temp
+*.bak
+*.backup
+tmp/
+temp/
+
+# ======================
+# OS SPECIFIC
+# ======================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ======================
+# LARGE ARCHIVE FILES
+# ======================
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tar.bz2
+*.iso
+
+# ======================
+# GIT SPECIFIC
+# ======================
+.gitattributes
+.github/
+
+# ======================
+# PROJECT SPECIFIC
+# ======================
+.env
+.env.local
+config_local.yaml
+secrets/
+credentials/
+
+# ======================
+# COMPILED DOCUMENTATION
+# ======================
+site/
+docs/_build/

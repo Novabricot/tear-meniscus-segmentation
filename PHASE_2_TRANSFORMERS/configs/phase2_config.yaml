@@ -1,0 +1,172 @@
+# ============================================================================
+# PHASE 2: MODERN ARCHITECTURES - SegFormer Transformers
+# ============================================================================
+# Target: F1 = 0.93-0.94 (+2-4% cumulative improvement)
+# Duration: Weeks 3-4
+# GPU Memory: 8-10 GB (for SegFormer-B3); 12+ GB (for B5)
+# ============================================================================
+
+# Model Configuration (SegFormer-B3 RECOMMENDED)
+model:
+  # Options: "segformer-b0", "segformer-b1", "segformer-b3" (recommended), "segformer-b5"
+  name: "SegFormer"
+  backbone: "segformer-b3"  # Best balance of speed and accuracy
+  pretrained: true
+  in_channels: 3
+  classes: 2  # background + tear meniscus
+  
+  # Alternative architectures (comment out segformer to use)
+  # backbone: "unetformer"         # Hybrid CNN-Transformer (lighter)
+  # backbone: "setr"               # Pure transformer (slower)
+  # backbone: "mask2former"         # SOTA but heavier
+  
+# Training Configuration
+training:
+  epochs: 100
+  batch_size: 4  # Smaller for transformer
+  learning_rate: 0.00005  # Lower LR for fine-tuning
+  weight_decay: 1e-4
+  optimizer: "AdamW"
+  scheduler: "PolynomialDecay"  # Better for transformers
+  warmup_epochs: 5
+  warmup_start_lr: 1e-6
+  
+  # Loss function
+  loss_function: "DiceLoss"
+  loss_weights:
+    dice: 1.0
+  
+  # Gradient accumulation (for memory efficiency)
+  accumulation_steps: 2  # Effective batch size = 8
+  
+  # Early stopping
+  early_stopping_patience: 20
+  early_stopping_metric: "f1"
+  
+  # Mixed precision training
+  use_amp: true
+  amp_dtype: "float16"
+  
+  # Gradient clipping
+  clip_grad_norm: 1.0
+
+# Data Configuration
+data:
+  dataset_path: "data/processed"
+  image_format: "png"
+  input_height: 512  # SegFormer input size (can be adjusted)
+  input_width: 512
+  # Note: Will be resized from 1024x1360, consider aspect ratio preservation
+  
+  splits:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+  
+  num_workers: 4
+  pin_memory: true
+
+# Augmentation Configuration (PHASE 1 baseline + enhancements)
+augmentation:
+  # Color/Intensity
+  brightness_contrast:
+    brightness_limit: 0.2
+    contrast_limit: 0.2
+    p: 0.3
+  
+  gamma:
+    gamma_limit: [80, 120]
+    p: 0.2
+  
+  clahe:
+    p: 0.2
+  
+  # Geometric
+  elastic_transform:
+    alpha: 1.5  # Slightly increased
+    sigma: 6
+    alpha_affine: 6
+    p: 0.3
+  
+  grid_distortion:
+    p: 0.2
+  
+  # Domain randomization
+  gaussian_noise:
+    var_limit: [10, 50]
+    p: 0.2
+  
+  iso_noise:
+    p: 0.1
+  
+  # Standard
+  horizontal_flip:
+    p: 0.5
+  
+  vertical_flip:
+    p: 0.2
+  
+  random_rotate_90:
+    p: 0.2
+  
+  # Mixup
+  mixup_enabled: true
+  mixup_alpha: 0.3  # Slightly increased for transformers
+  
+  # Progressive augmentation
+  progressive_augmentation:
+    enabled: true
+    start_intensity: 0.2
+    end_intensity: 1.0
+
+# Logging & Checkpoint Configuration
+logging:
+  log_dir: "PHASE_2_TRANSFORMERS/results"
+  save_interval: 5  # Save frequently to compare architectures
+  tensorboard_enabled: true
+  wandb_enabled: true  # For comparing with Phase 1
+  wandb_project: "tear-meniscus-phase2"
+  
+  metrics:
+    - "f1"
+    - "recall"
+    - "precision"
+    - "miou"
+    - "dice"
+    - "inference_fps"  # Track inference speed
+
+# Device Configuration
+device:
+  gpu: 0
+  num_gpus: 1
+  precision: "16-mixed"
+
+# Reproducibility
+seed: 42
+deterministic: true
+
+# Phase Information
+phase:
+  name: "Phase 2 - Modern Architectures"
+  target_f1: 0.94
+  expected_improvement: "+2-4% (cumulative from Phase 1)"
+  recommended_models:
+    1: "SegFormer-B3"  # RECOMMENDED: best balance
+    2: "SegFormer-B5"  # Higher accuracy, slower
+    3: "UNetFormer"    # Hybrid, lighter
+    4: "Mask2Former"   # SOTA, heavier
+  
+  key_techniques:
+    - "Transformer-based segmentation"
+    - "Efficient global context modeling"
+    - "Fine-tuning on pretrained weights"
+    - "Adaptive learning rate scheduling"
+    - "Gradient accumulation for memory efficiency"
+    - "Advanced augmentation (from Phase 1)"
+
+# Inference Configuration (for speed benchmarking)
+inference:
+  batch_size: 1
+  benchmark_iters: 100
+  warmup_iters: 10
+  compute_fps: true

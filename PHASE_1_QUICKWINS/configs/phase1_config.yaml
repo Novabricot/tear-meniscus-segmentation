@@ -1,0 +1,145 @@
+# ============================================================================
+# PHASE 1: QUICK WINS - DeepLabV3+ ResNet-101 + Enhanced Augmentation
+# ============================================================================
+# Target: F1 = 0.90-0.91 (+2-3% improvement over baseline U-Net)
+# Duration: Weeks 1-2
+# GPU Memory: 6-8 GB
+# ============================================================================
+
+# Model Configuration
+model:
+  name: "DeepLabV3+"
+  encoder_name: "resnet101"  # Upgraded from resnet50
+  encoder_weights: "imagenet"
+  in_channels: 3
+  classes: 2  # background + tear meniscus
+  activation: "sigmoid"
+  aux_params: null
+
+# Training Configuration
+training:
+  epochs: 100
+  batch_size: 8
+  learning_rate: 0.001
+  weight_decay: 1e-5
+  optimizer: "Adam"
+  scheduler: "CosineAnnealingLR"
+  warmup_epochs: 5
+  
+  # Loss function
+  loss_function: "DiceLoss"
+  loss_weights:
+    dice: 1.0
+    
+  # Early stopping
+  early_stopping_patience: 15
+  early_stopping_metric: "f1"
+  
+  # Mixed precision training
+  use_amp: true
+  amp_dtype: "float16"
+
+# Data Configuration
+data:
+  dataset_path: "data/processed"
+  image_format: "png"
+  input_height: 1024
+  input_width: 1360
+  
+  splits:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+  
+  num_workers: 4
+  pin_memory: true
+
+# Augmentation Configuration (ENHANCED for Phase 1)
+augmentation:
+  # Color/Intensity augmentation
+  brightness_contrast:
+    brightness_limit: 0.2
+    contrast_limit: 0.2
+    p: 0.3
+  
+  gamma:
+    gamma_limit: [80, 120]
+    p: 0.2
+  
+  clahe:
+    p: 0.2
+  
+  # Geometric augmentation
+  elastic_transform:
+    alpha: 1
+    sigma: 5
+    alpha_affine: 5
+    p: 0.3
+  
+  grid_distortion:
+    p: 0.2
+  
+  # Domain randomization
+  gaussian_noise:
+    var_limit: [10, 50]
+    p: 0.2
+  
+  iso_noise:
+    p: 0.1
+  
+  # Standard transformations
+  horizontal_flip:
+    p: 0.5
+  
+  vertical_flip:
+    p: 0.2
+  
+  random_rotate_90:
+    p: 0.2
+  
+  # Mixup (segmentation-aware)
+  mixup_enabled: true
+  mixup_alpha: 0.2
+  
+  # Progressive augmentation
+  progressive_augmentation:
+    enabled: true
+    start_intensity: 0.3
+    end_intensity: 1.0
+
+# Logging & Checkpoint Configuration
+logging:
+  log_dir: "PHASE_1_QUICKWINS/results"
+  save_interval: 10  # Save checkpoint every N epochs
+  tensorboard_enabled: true
+  wandb_enabled: false
+  
+  # Metrics to track
+  metrics:
+    - "f1"
+    - "recall"
+    - "precision"
+    - "miou"
+    - "dice"
+
+# Device Configuration
+device:
+  gpu: 0
+  num_gpus: 1
+  precision: "16-mixed"  # With AMP
+
+# Reproducibility
+seed: 42
+deterministic: true
+
+# Phase Information
+phase:
+  name: "Phase 1 - Quick Wins"
+  target_f1: 0.91
+  expected_improvement: "+2-3%"
+  key_techniques:
+    - "DeepLabV3+ ResNet-101"
+    - "Enhanced augmentation (Elastic, GridDistortion, Noise)"
+    - "Progressive augmentation schedule"
+    - "MixUp for segmentation"
+    - "Mixed precision training"
