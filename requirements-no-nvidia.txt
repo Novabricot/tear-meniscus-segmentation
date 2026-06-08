@@ -39,7 +39,6 @@ flake8==6.1.0
 mypy==1.4.1
 
 # Optional: GPU utilities
-nvidia-pytils==0.0.5
 
 # Optional: Model interpretability
 shap==0.42.1

@@ -4,7 +4,7 @@ torchaudio==2.0.2
 
 # Segmentation Models & Architectures
 segmentation-models-pytorch==0.3.3
-timm==0.9.6
+timm==0.9.2
 transformers==4.30.2
 
 # Data Augmentation
@@ -39,7 +39,6 @@ flake8==6.1.0
 mypy==1.4.1
 
 # Optional: GPU utilities
-nvidia-pytils==0.0.5
 
 # Optional: Model interpretability
 shap==0.42.1

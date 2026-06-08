@@ -69,14 +69,11 @@ tear-meniscus-segmentation/
 │   │   ├── augmentation.py            # Augmentation pipelines
 │   │   ├── metrics.py                 # Evaluation metrics
 │   │   ├── data_loader.py             # Dataset utilities
-│   │   └── logger.py                  # Logging utilities
-│   ├── inference.py                   # Single image inference
-│   ├── eval.py                        # Full evaluation
-│   └── preprocess_data.py             # Dataset preparation
+│   ├── preprocess_data.py             # Dataset preparation
+│   └── train_unet.py                  # U-Net training pipeline
 │
 ├── configs/                           # Shared configs
-│   ├── augmentation_config.yaml       # Augmentation settings
-│   └── base_config.yaml               # Base configuration
+│   ├── unet_config.yaml               # U-Net pipeline config
 │
 ├── notebooks/                         # Jupyter notebooks
 │   ├── 01_eda.ipynb                   # Exploratory analysis
@@ -128,16 +125,27 @@ pip install -r requirements.txt
 ```bash
 # Extract dataset archive to data/raw/
 # Expected structure:
-# data/raw/
-#   ├── color_images/
-#   ├── ir_images/
-#   └── annotations/
+# data/raw/Open DataSet2/<modality>/Original/
+# data/raw/Open DataSet2/<modality>/Label/
 
 # Preprocess and split dataset
-python scripts/preprocess_data.py --input data/raw --output data/processed
+python scripts/preprocess_data.py --input data/raw/Open DataSet2 --output data/processed
 ```
 
-### 3. Run Phase 1 (Quick Wins)
+### 3. Train U-Net on the Tear Meniscus Dataset
+
+```bash
+# Train the U-Net baseline with segmentation models and progressive augmentations
+python scripts/train_unet.py \
+    --config configs/unet_config.yaml \
+    --epochs 60 \
+    --batch-size 8
+
+# Monitor training
+tensorboard --logdir results/unet/
+```
+
+### 4. Run Phase 1 (Quick Wins)
 
 ```bash
 # Train DeepLabV3+ ResNet-101
