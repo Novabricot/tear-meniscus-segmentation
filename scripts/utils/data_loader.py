@@ -1,10 +1,10 @@
-import os
 from pathlib import Path
-from typing import Callable, List, Optional
+from typing import Callable, Optional
 
 import cv2
 import numpy as np
-from torch.utils.data import Dataset
+import torch
+from torch.utils.data import Dataset, DataLoader
 
 
 class TearMeniscusDataset(Dataset):
@@ -26,7 +26,8 @@ class TearMeniscusDataset(Dataset):
             )
 
         self.image_paths = sorted(
-            [p for p in self.images_dir.iterdir() if p.suffix.lower() in {".png", ".jpg", ".jpeg"}]
+            p for p in self.images_dir.iterdir()
+            if p.suffix.lower() in {".png", ".jpg", ".jpeg"}
         )
 
         if not self.image_paths:
@@ -39,9 +40,22 @@ class TearMeniscusDataset(Dataset):
         image_path = self.image_paths[idx]
         mask_path = self.masks_dir / image_path.name
 
+        if not mask_path.exists():
+            raise FileNotFoundError(f"Missing mask for image {image_path.name}: {mask_path}")
+
         image = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         mask = cv2.imread(str(mask_path), cv2.IMREAD_GRAYSCALE)
+
+        if image is None:
+            raise RuntimeError(f"Could not read image: {image_path}")
+        if mask is None:
+            raise RuntimeError(f"Could not read mask: {mask_path}")
+
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        # Albumentations expects masks as HxW arrays.
+        # Force binary mask before transforms to avoid strange gray levels.
+        mask = (mask > 127).astype("float32")
 
         if self.transform is not None:
             augmented = self.transform(image=image, mask=mask)
@@ -49,11 +63,29 @@ class TearMeniscusDataset(Dataset):
             mask = augmented["mask"]
         else:
             image = image.astype("float32") / 255.0
-            mask = mask.astype("float32") / 255.0
             image = np.transpose(image, (2, 0, 1))
-            mask = np.expand_dims(mask, axis=0)
+            image = torch.from_numpy(image).float()
+            mask = torch.from_numpy(mask).float()
 
-        mask = mask.float() if hasattr(mask, "float") else mask
+        if not isinstance(image, torch.Tensor):
+            image = torch.as_tensor(image).float()
+        else:
+            image = image.float()
+
+        if not isinstance(mask, torch.Tensor):
+            mask = torch.as_tensor(mask).float()
+        else:
+            mask = mask.float()
+
+        # DataLoader needs all masks to be [1, H, W], not [H, W].
+        if mask.ndim == 2:
+            mask = mask.unsqueeze(0)
+        elif mask.ndim == 3 and mask.shape[-1] == 1:
+            mask = mask.permute(2, 0, 1)
+
+        # Safety: keep masks binary after interpolation/augmentations.
+        mask = (mask > 0.5).float()
+
         return {"image": image, "mask": mask}
 
     def set_transform(self, transform: Callable):
@@ -70,11 +102,25 @@ def build_dataloader(
     shuffle: bool,
 ):
     dataset = TearMeniscusDataset(processed_root=processed_root, split=split, transform=transform)
-    return dataset, dataset, dataset
+    loader = DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+    )
+    return dataset, loader
 
 
 if __name__ == "__main__":
     from scripts.utils.augmentation import build_validation_transforms
 
-    dataset = TearMeniscusDataset("data/processed", split="train", transform=build_validation_transforms(256,256))
+    dataset = TearMeniscusDataset(
+        "data/processed",
+        split="train",
+        transform=build_validation_transforms(512, 512),
+    )
+    sample = dataset[0]
     print(f"Loaded {len(dataset)} samples")
+    print("image", sample["image"].shape, sample["image"].dtype)
+    print("mask", sample["mask"].shape, sample["mask"].dtype)

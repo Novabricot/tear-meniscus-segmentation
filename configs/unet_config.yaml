@@ -1,13 +1,13 @@
 data:
   dataset_path: "data/processed"
   input_height: 512
-  input_width: 680
+  input_width: 512
   image_format: "png"
   splits:
     train: 0.70
     val: 0.15
     test: 0.15
-  num_workers: 4
+  num_workers: 2
   pin_memory: true
   random_seed: 42
 
@@ -22,12 +22,12 @@ model:
 training:
   epochs: 60
   batch_size: 8
-  learning_rate: 5e-4
-  weight_decay: 1e-5
+  learning_rate: 0.0005
+  weight_decay: 0.00001
   optimizer: "AdamW"
   scheduler: "CosineAnnealingLR"
   T_max: 60
-  min_lr: 1e-6
+  min_lr: 0.000001
   warmup_epochs: 3
   use_amp: true
   gradient_accumulation_steps: 1
@@ -51,10 +51,9 @@ augmentation:
   elastic_transform:
     alpha: 1.0
     sigma: 5.0
-    alpha_affine: 5.0
-    p: 0.3
-  grid_distortion:
     p: 0.2
+  grid_distortion:
+    p: 0.1
   gaussian_noise:
     var_limit: [10, 50]
     p: 0.2
@@ -63,9 +62,9 @@ augmentation:
   horizontal_flip:
     p: 0.5
   vertical_flip:
-    p: 0.2
+    p: 0.0
   random_rotate_90:
-    p: 0.2
+    p: 0.0
   progressive_augmentation:
     enabled: true
     start_intensity: 0.3

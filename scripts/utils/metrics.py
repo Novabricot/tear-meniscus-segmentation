@@ -11,14 +11,18 @@ def _to_numpy(tensor):
     return np.asarray(tensor)
 
 
-def calculate_metrics(predictions, targets, threshold: float = 0.5) -> Dict[str, float]:
-    predictions = _to_numpy(predictions)
-    targets = _to_numpy(targets)
+def _squeeze_binary_map(array: np.ndarray) -> np.ndarray:
+    # Accept [B,1,H,W], [B,H,W], [1,H,W], [H,W].
+    if array.ndim == 4 and array.shape[1] == 1:
+        array = array[:, 0]
+    if array.ndim == 3 and array.shape[0] == 1:
+        array = array[0]
+    return array
 
-    if predictions.ndim == 4 and predictions.shape[1] == 1:
-        predictions = predictions[:, 0, :, :]
-    if targets.ndim == 4 and targets.shape[1] == 1:
-        targets = targets[:, 0, :, :]
+
+def calculate_metrics(predictions, targets, threshold: float = 0.5) -> Dict[str, float]:
+    predictions = _squeeze_binary_map(_to_numpy(predictions))
+    targets = _squeeze_binary_map(_to_numpy(targets))
 
     predictions = (predictions > threshold).astype("uint8")
     targets = (targets > threshold).astype("uint8")
@@ -43,5 +47,5 @@ def calculate_metrics(predictions, targets, threshold: float = 0.5) -> Dict[str,
 
 
 def batch_metrics(predictions: torch.Tensor, targets: torch.Tensor, threshold: float = 0.5) -> Dict[str, float]:
-    preds = torch.sigmoid(predictions) if predictions.ndim == 4 else predictions
+    preds = torch.sigmoid(predictions)
     return calculate_metrics(preds, targets, threshold=threshold)
