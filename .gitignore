@@ -148,3 +148,9 @@ credentials/
 # ======================
 site/
 docs/_build/
+
+
+models/
+results/
+.venv/
+data/
