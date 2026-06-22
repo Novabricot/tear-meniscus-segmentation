@@ -1,0 +1,84 @@
+augmentation:
+  brightness_contrast:
+    brightness_limit: 0.2
+    contrast_limit: 0.2
+    p: 0.3
+  clahe:
+    p: 0.2
+  elastic_transform:
+    alpha: 1.0
+    p: 0.2
+    sigma: 5.0
+  gamma:
+    gamma_limit:
+    - 80
+    - 120
+    p: 0.2
+  gaussian_noise:
+    p: 0.2
+    var_limit:
+    - 10
+    - 50
+  grid_distortion:
+    p: 0.1
+  horizontal_flip:
+    p: 0.5
+  iso_noise:
+    p: 0.1
+  progressive_augmentation:
+    enabled: true
+    end_intensity: 1.0
+    start_intensity: 0.3
+  random_rotate_90:
+    p: 0.0
+  vertical_flip:
+    p: 0.0
+data:
+  dataset_path: data/cross_center/leave_Colour2_out
+  image_format: png
+  input_height: 512
+  input_width: 512
+  num_workers: 2
+  pin_memory: true
+  random_seed: 42
+  splits:
+    test: 0.15
+    train: 0.7
+    val: 0.15
+logging:
+  checkpoint_dir: models/unet
+  checkpoint_interval: 5
+  log_dir: results/unet
+  metrics:
+  - loss
+  - f1
+  - precision
+  - recall
+  - miou
+  - dice
+  save_best_only: true
+  tensorboard_enabled: true
+loss:
+  bce_weight: 1.0
+  dice_weight: 1.0
+  mixup_alpha: 0.2
+  mixup_enabled: true
+model:
+  activation: null
+  classes: 1
+  encoder_name: resnet34
+  encoder_weights: imagenet
+  in_channels: 3
+  name: UNet
+training:
+  T_max: 60
+  batch_size: 8
+  epochs: 60
+  gradient_accumulation_steps: 1
+  learning_rate: 0.0005
+  min_lr: 1.0e-06
+  optimizer: AdamW
+  scheduler: CosineAnnealingLR
+  use_amp: true
+  warmup_epochs: 3
+  weight_decay: 1.0e-05
