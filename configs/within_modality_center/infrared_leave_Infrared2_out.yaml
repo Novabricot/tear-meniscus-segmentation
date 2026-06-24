@@ -1,0 +1,84 @@
+data:
+  dataset_path: data/within_modality_center/infrared_leave_Infrared2_out
+  input_height: 512
+  input_width: 512
+  image_format: png
+  splits:
+    train: 0.7
+    val: 0.15
+    test: 0.15
+  num_workers: 2
+  pin_memory: true
+  random_seed: 42
+model:
+  name: UNet
+  encoder_name: resnet34
+  encoder_weights: imagenet
+  in_channels: 3
+  classes: 1
+  activation: null
+training:
+  epochs: 60
+  batch_size: 8
+  learning_rate: 0.0005
+  weight_decay: 1.0e-05
+  optimizer: AdamW
+  scheduler: CosineAnnealingLR
+  T_max: 60
+  min_lr: 1.0e-06
+  warmup_epochs: 3
+  use_amp: true
+  gradient_accumulation_steps: 1
+loss:
+  bce_weight: 1.0
+  dice_weight: 1.0
+  mixup_alpha: 0.2
+  mixup_enabled: true
+augmentation:
+  brightness_contrast:
+    brightness_limit: 0.2
+    contrast_limit: 0.2
+    p: 0.3
+  gamma:
+    gamma_limit:
+    - 80
+    - 120
+    p: 0.2
+  clahe:
+    p: 0.2
+  elastic_transform:
+    alpha: 1.0
+    sigma: 5.0
+    p: 0.2
+  grid_distortion:
+    p: 0.1
+  gaussian_noise:
+    var_limit:
+    - 10
+    - 50
+    p: 0.2
+  iso_noise:
+    p: 0.1
+  horizontal_flip:
+    p: 0.5
+  vertical_flip:
+    p: 0.0
+  random_rotate_90:
+    p: 0.0
+  progressive_augmentation:
+    enabled: true
+    start_intensity: 0.3
+    end_intensity: 1.0
+logging:
+  log_dir: results/within_modality_center/infrared_leave_Infrared2_out
+  checkpoint_dir: models/within_modality_center/infrared_leave_Infrared2_out
+  checkpoint_interval: 5
+  tensorboard_enabled: true
+  save_best_only: true
+  metrics:
+  - loss
+  - f1
+  - precision
+  - recall
+  - miou
+  - dice
