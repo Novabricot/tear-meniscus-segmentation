@@ -37,8 +37,11 @@ class SegFormerTrainer:
         self.model_name = model_name or "nvidia/segformer-b0-finetuned-ade-512-512"
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        self.log_dir = Path("results/segformer")
-        self.checkpoint_dir = Path("models/segformer")
+        logging_cfg = self.config.get("logging", {})
+
+        self.log_dir = Path(logging_cfg.get("log_dir", "results/segformer"))
+        self.checkpoint_dir = Path(logging_cfg.get("checkpoint_dir", "models/segformer"))
+
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
