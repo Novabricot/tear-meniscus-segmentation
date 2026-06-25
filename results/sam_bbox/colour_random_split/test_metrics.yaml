@@ -1,0 +1,12 @@
+f1: 0.07875463148617681
+precision: 0.04503443190479158
+recall: 0.49751790221975634
+miou: 0.0426955485952957
+num_images: 253
+skipped_empty_masks: 0
+model_type: vit_b
+checkpoint: checkpoints/sam/sam_vit_b_01ec64.pth
+config: configs/modality_split/colour_config_run2.yaml
+dataset_path: data/modality_split/colour
+box_padding: 5
+prompt_type: oracle_gt_bbox
