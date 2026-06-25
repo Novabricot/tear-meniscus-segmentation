@@ -1,0 +1,14 @@
+f1: 0.025125733654723703
+precision: 0.014006492163431083
+recall: 0.14489928447410555
+miou: 0.013030760179594723
+num_images: 253
+skipped_empty_masks: 0
+model_type: vit_b
+checkpoint: checkpoints/medsam/medsam_vit_b.pth
+config: configs/modality_split/colour_config_run2.yaml
+dataset_path: data/modality_split/colour
+box_padding: 5
+threshold: 0.9
+prompt_type: oracle_gt_bbox
+model_family: MedSAM
