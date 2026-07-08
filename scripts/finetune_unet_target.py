@@ -2,7 +2,6 @@ import argparse
 from pathlib import Path
 
 import torch
-import yaml
 
 from train_unet import UNetTrainer
 
@@ -10,7 +9,7 @@ from train_unet import UNetTrainer
 def load_checkpoint(
     trainer: UNetTrainer,
     checkpoint_path: Path,
-):
+) -> None:
     checkpoint = torch.load(
         checkpoint_path,
         map_location=trainer.device,
@@ -30,30 +29,22 @@ def load_checkpoint(
 
     trainer.model.load_state_dict(state_dict)
 
-    print(
-        f"Loaded pretrained checkpoint: "
-        f"{checkpoint_path}"
-    )
+    print(f"Loaded pretrained checkpoint: {checkpoint_path}")
 
 
 def override_learning_rate(
     trainer: UNetTrainer,
     learning_rate: float,
-):
+) -> None:
     for param_group in trainer.optimizer.param_groups:
         param_group["lr"] = learning_rate
 
-    print(
-        f"Fine-tuning learning rate: "
-        f"{learning_rate}"
-    )
+    print(f"Fine-tuning learning rate: {learning_rate}")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
-        description=(
-            "Fine-tune a pretrained U-Net on a target center."
-        )
+        description="Fine-tune a pretrained U-Net on a target center."
     )
 
     parser.add_argument(
@@ -87,17 +78,11 @@ def main():
             f"Checkpoint not found: {checkpoint_path}"
         )
 
-    with config_path.open(
-        "r",
-        encoding="utf-8",
-    ) as file:
-        config = yaml.safe_load(file)
-
     print("Target-center fine-tuning")
     print(f"Config:     {config_path}")
     print(f"Checkpoint: {checkpoint_path}")
 
-    trainer = UNetTrainer(config)
+    trainer = UNetTrainer(config_path)
 
     load_checkpoint(
         trainer=trainer,
