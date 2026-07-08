@@ -5,8 +5,9 @@ from pathlib import Path
 import torch
 import yaml
 from torch.cuda.amp import GradScaler
+from tqdm import tqdm
 
-from train_unet import UNetTrainer
+from train_unet import UNetTrainer, ensure_mask_channel
 
 
 logger = logging.getLogger(__name__)
@@ -42,11 +43,11 @@ def load_checkpoint(
     )
 
 
-def freeze_encoder(
-    model: torch.nn.Module,
-) -> None:
+def freeze_encoder(model: torch.nn.Module) -> None:
     for parameter in model.encoder.parameters():
         parameter.requires_grad = False
+
+    model.encoder.eval()
 
     trainable_parameters = sum(
         parameter.numel()
@@ -72,7 +73,7 @@ def build_decoder_optimizer(
     trainer: UNetTrainer,
     model: torch.nn.Module,
     learning_rate: float,
-):
+) -> torch.optim.Optimizer:
     trainable_parameters = [
         parameter
         for parameter in model.parameters()
@@ -91,6 +92,85 @@ def build_decoder_optimizer(
         lr=learning_rate,
         weight_decay=weight_decay,
     )
+
+
+def train_epoch_frozen_encoder(
+    trainer: UNetTrainer,
+    model: torch.nn.Module,
+    loader,
+    optimizer: torch.optim.Optimizer,
+    scaler: GradScaler,
+    epoch: int,
+) -> float:
+    model.train()
+
+    # Keep the pretrained encoder fully frozen,
+    # including BatchNorm running statistics.
+    model.encoder.eval()
+
+    total_loss = 0.0
+    step = 0
+
+    mixup_enabled = bool(
+        trainer.config["loss"].get(
+            "mixup_enabled",
+            True,
+        )
+    )
+
+    use_amp = (
+        bool(
+            trainer.config["training"].get(
+                "use_amp",
+                False,
+            )
+        )
+        and trainer.device.type == "cuda"
+    )
+
+    for batch in tqdm(
+        loader,
+        desc=f"Train Epoch {epoch + 1}",
+        leave=False,
+    ):
+        images = batch["image"].to(
+            trainer.device,
+            non_blocking=True,
+        )
+
+        masks = batch["mask"].to(
+            trainer.device,
+            non_blocking=True,
+        )
+
+        masks = ensure_mask_channel(masks)
+
+        if mixup_enabled:
+            images, masks = trainer.apply_mixup(
+                images,
+                masks,
+            )
+
+        optimizer.zero_grad(set_to_none=True)
+
+        with torch.cuda.amp.autocast(
+            enabled=use_amp,
+        ):
+            logits = model(images)
+
+            loss = trainer.compute_loss(
+                logits,
+                masks,
+            )
+
+        scaler.scale(loss).backward()
+        scaler.step(optimizer)
+        scaler.update()
+
+        total_loss += loss.item()
+        step += 1
+
+    return total_loss / max(step, 1)
 
 
 def run_training(
@@ -141,7 +221,8 @@ def run_training(
     )
 
     for epoch in range(trainer.epochs):
-        train_loss = trainer.train_epoch(
+        train_loss = train_epoch_frozen_encoder(
+            trainer=trainer,
             model=model,
             loader=train_loader,
             optimizer=optimizer,
@@ -181,31 +262,26 @@ def run_training(
                 train_loss,
                 epoch + 1,
             )
-
             trainer.writer.add_scalar(
                 "Loss/val",
                 val_metrics["loss"],
                 epoch + 1,
             )
-
             trainer.writer.add_scalar(
                 "Metrics/f1",
                 val_metrics["f1"],
                 epoch + 1,
             )
-
             trainer.writer.add_scalar(
                 "Metrics/precision",
                 val_metrics["precision"],
                 epoch + 1,
             )
-
             trainer.writer.add_scalar(
                 "Metrics/recall",
                 val_metrics["recall"],
                 epoch + 1,
             )
-
             trainer.writer.add_scalar(
                 "Metrics/miou",
                 val_metrics["miou"],
@@ -287,10 +363,10 @@ def run_training(
         trainer.writer.close()
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
-            "Train a U-Net decoder using a frozen "
+            "Train a U-Net decoder using a fully frozen "
             "pretrained encoder."
         )
     )
