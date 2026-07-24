@@ -18,11 +18,17 @@ It only evaluates an existing checkpoint.
 
 from __future__ import annotations
 
+from __future__ import annotations
+
 import argparse
 import csv
 import json
+import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT))
 
 import torch
 import torch.nn.functional as F
