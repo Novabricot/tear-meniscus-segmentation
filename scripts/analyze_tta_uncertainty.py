@@ -167,12 +167,25 @@ def predict_tta_probabilities(
     """
     Returns:
         probs: tensor of shape (T, B, H, W), foreground probabilities.
+
+    Supports both:
+        - binary models with 1 output channel: sigmoid(logits)
+        - 2-class models with 2 output channels: softmax(logits)[:, 1]
     """
     probs = []
 
     for _name, aug_images, inverse_name in apply_tta(images):
         logits = model(aug_images)
-        prob_fg = torch.softmax(logits, dim=1)[:, 1, :, :]
+
+        if logits.shape[1] == 1:
+            prob_fg = torch.sigmoid(logits[:, 0, :, :])
+        elif logits.shape[1] == 2:
+            prob_fg = torch.softmax(logits, dim=1)[:, 1, :, :]
+        else:
+            raise ValueError(
+                f"Expected model output with 1 or 2 channels, got shape {tuple(logits.shape)}"
+            )
+
         prob_fg = invert_prediction(prob_fg, inverse_name)
         probs.append(prob_fg)
 
