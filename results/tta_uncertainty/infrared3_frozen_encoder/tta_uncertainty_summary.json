@@ -1,0 +1,29 @@
+[
+  {
+    "radius": 1,
+    "mean_uncertainty_all": 0.0007778371800668538,
+    "mean_uncertainty_certain_positive": 0.007859459146857262,
+    "mean_uncertainty_uncertain_boundary": 0.05200200155377388,
+    "mean_uncertainty_certain_negative": 0.00021036184625700116,
+    "boundary_over_certain_positive": 6.616486017942821,
+    "boundary_over_certain_negative": 247.20262955974687
+  },
+  {
+    "radius": 2,
+    "mean_uncertainty_all": 0.0007778371800668538,
+    "mean_uncertainty_certain_positive": 0.005856646224856377,
+    "mean_uncertainty_uncertain_boundary": 0.031823672354221344,
+    "mean_uncertainty_certain_negative": 0.00016980955842882395,
+    "boundary_over_certain_positive": 5.433770648320449,
+    "boundary_over_certain_negative": 187.4080154772931
+  },
+  {
+    "radius": 3,
+    "mean_uncertainty_all": 0.0007778371800668538,
+    "mean_uncertainty_certain_positive": 0.005180663429200649,
+    "mean_uncertainty_uncertain_boundary": 0.023127809166908264,
+    "mean_uncertainty_certain_negative": 0.00015339921810664237,
+    "boundary_over_certain_positive": 4.4642562642747805,
+    "boundary_over_certain_negative": 150.76875522813896
+  }
+]
